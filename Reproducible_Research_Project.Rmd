@@ -1,0 +1,142 @@
+---
+title: "Reproducible Research Project"
+author: "Karan Vijay Kashyap"
+date: '`r Sys.Date()`'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+\centering
+
+\raggedright
+
+\abstract
+Article Title: Determinant of Human Development Index in ASEAN Countries
+The development debate is about more than just per capita income increase. Development is a multifaceted concept that encompasses many aspects of the community. According to Sarkar et al. (2012), human development is one of the most important factors in determining a country's degree of development. In 1990, the Human Development Index (HDI) was first released. It assesses longevity and health, as well as knowledge and a reasonable way of living. The HDI employs the logarithm of income to illustrate the decreasing relevance of income as GNP rises.
+
+\newpage 
+# Introduction
+The development debate is about more than just per capita income increase. Development is a multifaceted concept that encompasses many aspects of the community. According to Sarkar et al. (2012), human development is one of the most important factors in determining a country's degree of development. In 1990, the Human Development Index (HDI) was first released. It assesses longevity and health, as well as knowledge and a reasonable way of living. The HDI employs the logarithm of income to illustrate the decreasing relevance of income as GNP rises.
+
+## About Data
+In this project, I have found the data on worlddatabank, I selected 10 countries which were discussed in the article and 6 rows names Inflation, Unemployment, GDP Per capita Growth, GDP Growth, Population and Human Development Index from 2000 to 2015. It was very complex to find this data as everything was not present on one place.
+
+## Objective of study
+The main objective of this study is to reproduce the same result by applying fixed effect model and random effect model and compare the both the model, Later replicate the same model using new dataset. The main purpose of this study is to understand how reproducible research is done.
+
+\newpage
+
+# Load the packages
+
+```{r}
+library("MASS")
+library("sandwich")
+library("zoo")
+library("car")
+library("lmtest")
+library("Formula")
+library("plm")
+library("stargazer")
+library("aod")
+library("strucchange")
+```
+# Data Analysis
+The first 5 rows of the data was shown using head function, In this we can see clearly the 6 column name, variables used and structure of the data
+
+```{r}
+library(readxl)
+Data <- read_excel("C:\\Users\\ASUS\\Desktop\\Reproducible-Research-Project\\Data.xlsx")
+View(Data)
+head(Data)
+```
+
+The summary function shows that the min value, Max value, and mean value for each variable which is very significant.we can clearly see that the data is spreaded in larger range.
+```{r }
+summary(Data)
+```
+We can see from the below Structure that we have 160 obsversation and 8 Variables which are Country, Year, Inflation, Unemployement, GDP Per Capita growht, Population, HDI.
+```{r}
+str(Data)
+```
+We can see that we dont have any missing value in our Dataset.
+```{r}
+sapply(Data, function(x) sum(is.na(x)))
+```
+
+## Data Visualization
+The below histogram will help us to check the normality of the data, 
+The histogram seems to be skewed but overall it looks good and we can proceed with it.
+```{r}
+par(mfrow=c(3,3))
+par(mar=c(2,2,1,1))
+hist(Data$Inflation)
+hist(Data$Unemployment)
+hist(Data$`GDP per capita growth`)
+hist(Data$`GDP growth`)
+hist(Data$Population)
+hist(Data$HDI)
+
+```
+
+# Method
+The fixed-effect model is used to estimate the first step in this research. The Chow-test is then used to determine whether we reject the null hypothesis or not. The equation is then estimated using a random effect model. Using the Hausman-test, we can observe that we reject the null hypothesis, which stated whether or not the random effect model is consistent.
+
+# Fixed effects model
+
+```{r}
+#install.packages("plm")
+#library("plm")
+fixed <- plm(HDI~Inflation+Unemployment+Data$`GDP per capita growth`+Data$`GDP growth`+Population, 
+            data=Data, index=c("Country", "Year"), model="within")
+summary(fixed)
+```
+# Perform Chow test
+```{r}
+sctest(Data$HDI ~ Data$Inflation+ Data$Unemployment+Data$`GDP per capita growth`+Data$`GDP growth`+Data$Population, type = "Chow", point = 10)
+
+```
+
+
+# Random Effect Model
+
+```{r}
+#install.packages("plm")
+#library("plm")
+Random <- plm(HDI~Inflation+Unemployment+Data$`GDP per capita growth`+Data$`GDP growth`+Population, 
+            data=Data, index=c("Country", "Year"), model="random")
+summary(Random)
+
+```
+
+# Hausman Test
+One of the important test in this package for choosing between "fixed effect" or "random effect" model is called Hausman type
+
+```{r}
+phtest(fixed, Random)
+```
+## Same model with updated newdataset
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
