@@ -34,7 +34,7 @@ The main objective of this study is to reproduce the same result by applying fix
 
 # Load the packages
 
-```{r}
+```{r, include=FALSE}
 library("MASS")
 library("sandwich")
 library("zoo")
@@ -68,7 +68,7 @@ We can see that we dont have any missing value in our Dataset.
 sapply(Data, function(x) sum(is.na(x)))
 ```
 
-## Data Visualization
+# Data Visualization
 The below histogram will help us to check the normality of the data, 
 The histogram seems to be skewed but overall it looks good and we can proceed with it.
 ```{r}
@@ -82,7 +82,16 @@ hist(Data$Population)
 hist(Data$HDI)
 
 ```
+# Methodology from the Research Paper
+The first, run the estimation using fixed-effect model. Second, do the Chow-test to choose between pooled ordinary least square or fixed effect model . After that using the Chow-test we can see that we reject or accept the null hypothesis depending on our results
+
+The next step we estimate the equation with random effect model. After that using the using the Hausman-test, we can see that we reject or accept the null hypothesis depending on our results
+
+We will apply the exactly same methodology in our reproducible research and will try to find similar results as that of our research paper.
+
+
 # Logarithm Data
+The log
 ```{r}
 
 logData <- Data
@@ -95,11 +104,12 @@ logData$Population <- log(Data$Population)
 logData$HDI <- log(Data$HDI)
 
 ```
-# Method
-The fixed-effect model is used to estimate the first step in this research. The Chow-test is then used to determine whether we reject the null hypothesis or not. The equation is then estimated using a random effect model. Using the Hausman-test, we can observe that we reject the null hypothesis, which stated whether or not the random effect model is consistent.
+
 
 # Fixed effects model
 Fixed-effects models are a class of statistical models in which the levels (i.e., values) of independent variables are assumed to be fixed (i.e., constant), and only the dependent variable changes in response to the levels of independent variables
+
+From the below results, we can conclude that variable inflation, `GDP growth`and `GDP per capita growth` is insignificant, whereas variable Unemployment and Population. Moreover we can see that p-value:  2.22e-16 is less than significance level of 0.05 thus rejects the null hypothesis. 
 
 ```{r}
 #install.packages("plm")
@@ -108,9 +118,12 @@ fixed <- plm(HDI~Inflation+Unemployment+logData$`GDP per capita growth`+logData$
             data=logData, index=c("Country", "Year"), model="within")
 summary(fixed)
 ```
-From the above results, we can conclude that variable inflation is insignificant, whereas variable Unemployment, `GDP per capita growth`, `GDP growth` , Population. Moreover we can see that p-value: 2.6547e-15 is less than significance level of 0.05 thus rejects the null hypothesis. 
+
 
 # OLS
+We reject the null hypothesis that all individual effects are inconsequential since the p-value is less than the 5% significance level.
+Clearly, the Fixed effects model outperforms the OLS model.
+
 ```{r}
 OLS <- plm(HDI~Inflation+Unemployment+logData$`GDP per capita growth`+logData$`GDP growth`+Population, 
             data=logData, index=c("Country", "Year"), model="pooling")
@@ -120,7 +133,7 @@ summary(OLS)
 
 
 # Perform Chow test
-As we can see that the p-value is 0.4443 which means we accept the null hypothesis, which is quite different from the actual results in the research paper. As there siginificance value is less than 0.05 thus accepts the null hypothesis.
+As we can see that the p-value is 0.3734 which means we accept the null hypothesis, which is quite different from the actual results in the research paper. As there significance value is less than 0.05 thus accepts the null hypothesis.
 
 ```{r}
 sctest(logData$HDI ~ logData$Inflation+ logData$Unemployment+logData$`GDP per capita growth`+logData$`GDP growth`+logData$Population, type = "Chow", point = 10)
@@ -141,11 +154,21 @@ summary(Random)
 ```
 
 # Hausman Test
-One of the important test in this package for choosing between "fixed effect" or "random effect" model is called Hausman type
+Results of the Haussman test, which compares the fixed effect model versus the random effect model. The Hausman test yields a significant result. The results show that using a fixed effect model rather than a random effect model makes the results more stable. As a result, the fixed effect model will be used in this study to estimate the drivers of factors impacting the human development index in 10 ASEAN member nations. The observation was carried out over a period of 16 years in 10 ASEAN nations, for a total of 160 observations.
+ 
+# Hausman Result from the Research Paper which is very similar to our results 
+chisq     df    p-value
+257.9291 4.0000 0.0000
 
+Our Results: chisq = 226.83, df = 5, p-value < 2.2e-16
 ```{r}
 phtest(fixed, Random)
 ```
+# Final Results of Reproducible Research on Original Dataset.
+I would like to conclude that the results are quite similar for fixed effect mode, ols model, random model and hausman to that of research paper but chow test is not similar as in our paper we accept the null hypothesis while in research paper we have to reject the null hypothesis, which is very strange as chow test is used to choose between fixed and ols model, we can clearly see that fixed model outperforms ols model from our results.
+
+
+
 # Applying same model on a new dataset with 10 different country chosed from extended paper.
 
 ```{r}
@@ -186,7 +209,12 @@ NewlogData$HDI <- log(NewData$HDI)
 
 ```
 
+# Method (New Dataset)
+The fixed-effect model is used to estimate the first step in this research. The Chow-test is then used to determine whether we reject the null hypothesis or not. The equation is then estimated using a random effect model. Using the Hausman-test, we can observe that we reject the null hypothesis, which stated whether or not the random effect model is consistent. We will apply same method as applied in our research paper but with new dataset to compare the results and understand the difference when comparing different HDI countries.
+
+
 # Fixed Effect Model (New Dataset)
+From the below results, we can conclude that variable inflation is insignificant, whereas variable Unemployment, `GDP growth',  `GDP per capita growth and Population. Moreover we can see that p-value:  2.22e-16 is less than significance level of 0.05 thus rejects the null hypothesis. 
 
 ```{r}
 #install.packages("plm")
@@ -198,6 +226,8 @@ summary(Newfixed)
 
 # OLS (New Dataset)
 
+From the below results, we can conclude that variable inflation is insignificant, whereas variable Unemployment, `GDP growth',  `GDP per capita growth and Population. Moreover we can see that p-value:  2.22e-16 is less than significance level of 0.05 thus rejects the null hypothesis. The ols result for newdata set is quite similar to that of fixed model. which is a good sign as both the model have same significant variable.
+
 ```{r}
 OLS <- plm(HDI~Inflation+Unemployment+NewlogData$`GDP per capita growth`+NewlogData$`GDP growth`+Population, 
             data=NewlogData, index=c("Country", "Year"), model="pooling")
@@ -205,12 +235,15 @@ summary(OLS)
 
 ```
 # Chow Test(New Dataset)
+As we can see that the p-value is 0.8378 which means we accept the null hypothesis, which is quite different from the actual results in the research paper. As there significance value is less than 0.05 thus accepts the null hypothesis. The same result we had in our original dataset aswell.
 
 ```{r}
 sctest(NewlogData$HDI ~ NewlogData$Inflation+ NewlogData$Unemployment+NewlogData$`GDP per capita growth`+NewlogData$`GDP growth`+NewlogData$Population, type = "Chow", point = 10)
 
 ```
 # Random Effect Mode (New Dataset)
+In econometrics, random effects models are used in panel analysis of hierarchical or panel data when one assumes no fixed effects. As we can see the below result our p-value: 0.67281 thus which is more than the significance value thus we accept the null hypothesis.
+
 ```{r}
 #install.packages("plm")
 #library("plm")
@@ -220,12 +253,14 @@ summary(NewRandom)
 
 ```
 # Hausman Test (New Dataset)
+Results of the Haussman test, which compares the fixed effect model versus the random effect model. The Hausman test yields a significant result. The results show that using a fixed effect model rather than a random effect model makes the results more stable. As a result, the fixed effect model will be used in this study to estimate the drivers of factors impacting the human development index in 10 ASEAN member nations.
+
 ```{r}
 phtest(Newfixed, NewRandom)
 ```
 
 # Discussion 
-Europe, Central Asia, Latin America, and the Carribean have a higher human development index (HDI) than South Asia and Sub-Saharan Africa. Kpolovie et al. (2017) show that Africa has HDI means significantly lower than for each of the other continents in the world. Economic growth, income distribution, population control, poverty alleviation, and improved health and education services are essential to improve HDI. Bangun (2016) shows that women's economic participation is still far below men. Singariya (2014) suggests enlargement of women empowerment, and household facilities are essential to enhance the value of HDI. The government should allocate specifically to increase budget allocation in both sectors.Theoretically, one factor that can accelerate the HDI is the increase in per capita income.
+Some of our understanding from the research paper, original dataset results and new dataset results are discussed as Europe, Central Asia, Latin America, and the Carribean have a higher human development index (HDI) than South Asia and Sub-Saharan Africa. Kpolovie et al. (2017) show that Africa has HDI means significantly lower than for each of the other continents in the world. Economic growth, income distribution, population control, poverty alleviation, and improved health and education services are essential to improve HDI. Bangun (2016) shows that women's economic participation is still far below men. Singariya (2014) suggests enlargement of women empowerment, and household facilities are essential to enhance the value of HDI. The government should allocate specifically to increase budget allocation in both sectors.Theoretically, one factor that can accelerate the HDI is the increase in per capita income.
 Hasan (2013); Eren et al. (2014) show that GDP per capita affect the level of development.This improvement will increase the purchasing power of people and at the end will improve
 the quality of education and health.
 
