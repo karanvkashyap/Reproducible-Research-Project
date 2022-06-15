@@ -3,9 +3,9 @@ title: "Reproducible Research Project"
 author: "Karan Vijay Kashyap"
 date: '`r Sys.Date()`'
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 fig_caption: yes
 ---
 
@@ -52,7 +52,6 @@ The first 5 rows of the data was shown using head function, In this we can see c
 ```{r}
 library(readxl)
 Data <- read_excel("C:\\Users\\ASUS\\Desktop\\Reproducible-Research-Project\\Data.xlsx")
-View(Data)
 head(Data)
 ```
 
@@ -83,33 +82,60 @@ hist(Data$Population)
 hist(Data$HDI)
 
 ```
+# Logarithm Data
+```{r}
 
+logData <- Data
+
+logData$Inflation <- log(Data$Inflation + 2.5)
+logData$Unemployment <- log(Data$Unemployment )
+logData$`GDP per capita growth` <- log(Data$`GDP per capita growth` + 4)
+logData$`GDP growth`<- log(Data$`GDP growth` + 3)
+logData$Population <- log(Data$Population)
+logData$HDI <- log(Data$HDI)
+
+```
 # Method
 The fixed-effect model is used to estimate the first step in this research. The Chow-test is then used to determine whether we reject the null hypothesis or not. The equation is then estimated using a random effect model. Using the Hausman-test, we can observe that we reject the null hypothesis, which stated whether or not the random effect model is consistent.
 
 # Fixed effects model
+Fixed-effects models are a class of statistical models in which the levels (i.e., values) of independent variables are assumed to be fixed (i.e., constant), and only the dependent variable changes in response to the levels of independent variables
 
 ```{r}
 #install.packages("plm")
 #library("plm")
-fixed <- plm(HDI~Inflation+Unemployment+Data$`GDP per capita growth`+Data$`GDP growth`+Population, 
-            data=Data, index=c("Country", "Year"), model="within")
+fixed <- plm(HDI~Inflation+Unemployment+logData$`GDP per capita growth`+logData$`GDP growth`+Population, 
+            data=logData, index=c("Country", "Year"), model="within")
 summary(fixed)
 ```
-# Perform Chow test
+From the above results, we can conclude that variable inflation is insignificant, whereas variable Unemployment, `GDP per capita growth`, `GDP growth` , Population. Moreover we can see that p-value: 2.6547e-15 is less than significance level of 0.05 thus rejects the null hypothesis. 
+
+# OLS
 ```{r}
-sctest(Data$HDI ~ Data$Inflation+ Data$Unemployment+Data$`GDP per capita growth`+Data$`GDP growth`+Data$Population, type = "Chow", point = 10)
+OLS <- plm(HDI~Inflation+Unemployment+logData$`GDP per capita growth`+logData$`GDP growth`+Population, 
+            data=logData, index=c("Country", "Year"), model="pooling")
+summary(OLS)
+
+```
+
+
+# Perform Chow test
+As we can see that the p-value is 0.4443 which means we accept the null hypothesis, which is quite different from the actual results in the research paper. As there siginificance value is less than 0.05 thus accepts the null hypothesis.
+
+```{r}
+sctest(logData$HDI ~ logData$Inflation+ logData$Unemployment+logData$`GDP per capita growth`+logData$`GDP growth`+logData$Population, type = "Chow", point = 10)
 
 ```
 
 
 # Random Effect Model
+In econometrics, random effects models are used in panel analysis of hierarchical or panel data when one assumes no fixed effects. As we can see the below result our p-value: 9.8702e-10 thus which is less than the significance value thus we reject the null hypothesis.
 
 ```{r}
 #install.packages("plm")
 #library("plm")
-Random <- plm(HDI~Inflation+Unemployment+Data$`GDP per capita growth`+Data$`GDP growth`+Population, 
-            data=Data, index=c("Country", "Year"), model="random")
+Random <- plm(HDI~Inflation+Unemployment+logData$`GDP per capita growth`+logData$`GDP growth`+Population, 
+            data=logData, index=c("Country", "Year"), model="random")
 summary(Random)
 
 ```
@@ -120,12 +146,17 @@ One of the important test in this package for choosing between "fixed effect" or
 ```{r}
 phtest(fixed, Random)
 ```
-#Now we will replicate this model with new dataset 
+# Applying same model on a new dataset with 10 different country chosed from extended paper.
 
 ```{r}
 library(readxl)
-NewData <- read_excel("C:\\Users\\ASUS\\Desktop\\Reproducible-Research-Project\\NewData.xlsx")
+NewData <- read_excel("NewData.xlsx")
 View(NewData)
+```
+
+ 
+# Data Analysis (New Dataset)
+```{r}
 head(NewData)
 ```
 
@@ -133,40 +164,70 @@ head(NewData)
 summary(NewData)
 ```
 
-# Fixed effects model
+```{r}
+str(NewData)
+```
 
 ```{r}
-install.packages("plm")
-library("plm")
-Newfixed <- plm(HDI~Inflation+Unemployment+NewData$`GDP per capita growth`+NewData$`GDP growth`+Population, 
-            data=NewData, index=c("Country", "Year"), model="within")
-print(Newfixed)
+sapply(NewData, function(x) sum(is.na(x)))
 ```
-## Perform Chow test
+
+# Log Transformation (New Dataset)
 ```{r}
-sctest(NewData$HDI ~ NewData$Inflation+ NewData$Unemployment+NewData$`GDP per capita growth`+NewData$`GDP growth`+NewData$Population, type = "Chow", point = 10)
+
+NewlogData <- NewData
+
+NewlogData$Inflation <- log(NewData$Inflation + 19)
+NewlogData$Unemployment <- log(NewData$Unemployment )
+NewlogData$`GDP per capita growth` <- log(NewData$`GDP per capita growth` + 16)
+NewlogData$`GDP growth`<- log(NewData$`GDP growth` + 14)
+NewlogData$Population <- log(NewData$Population)
+NewlogData$HDI <- log(NewData$HDI)
 
 ```
-# Random Effect Model
+
+# Fixed Effect Model (New Dataset)
+
 ```{r}
 #install.packages("plm")
-library("plm")
-NewRandom <-plm(HDI~Inflation+Unemployment+NewData$`GDP per capita growth`+NewData$`GDP growth`+Population, 
-            data=NewData, index=c("Country", "Year"), model="random")
+#library("plm")
+Newfixed <- plm(HDI~Inflation+Unemployment+NewlogData$`GDP per capita growth`+NewlogData$`GDP growth`+Population, 
+            data=NewlogData, index=c("Country", "Year"), model="within")
+summary(Newfixed)
 ```
-# Hausman Test
+
+# OLS (New Dataset)
+
+```{r}
+OLS <- plm(HDI~Inflation+Unemployment+NewlogData$`GDP per capita growth`+NewlogData$`GDP growth`+Population, 
+            data=NewlogData, index=c("Country", "Year"), model="pooling")
+summary(OLS)
+
+```
+# Chow Test(New Dataset)
+
+```{r}
+sctest(NewlogData$HDI ~ NewlogData$Inflation+ NewlogData$Unemployment+NewlogData$`GDP per capita growth`+NewlogData$`GDP growth`+NewlogData$Population, type = "Chow", point = 10)
+
+```
+# Random Effect Mode (New Dataset)
+```{r}
+#install.packages("plm")
+#library("plm")
+NewRandom <- plm(HDI~Inflation+Unemployment+NewlogData$`GDP per capita growth`+NewlogData$`GDP growth`+Population, 
+            data=NewlogData, index=c("Country", "Year"), model="random")
+summary(NewRandom)
+
+```
+# Hausman Test (New Dataset)
 ```{r}
 phtest(Newfixed, NewRandom)
 ```
 
+# Discussion 
+Europe, Central Asia, Latin America, and the Carribean have a higher human development index (HDI) than South Asia and Sub-Saharan Africa. Kpolovie et al. (2017) show that Africa has HDI means significantly lower than for each of the other continents in the world. Economic growth, income distribution, population control, poverty alleviation, and improved health and education services are essential to improve HDI. Bangun (2016) shows that women's economic participation is still far below men. Singariya (2014) suggests enlargement of women empowerment, and household facilities are essential to enhance the value of HDI. The government should allocate specifically to increase budget allocation in both sectors.Theoretically, one factor that can accelerate the HDI is the increase in per capita income.
+Hasan (2013); Eren et al. (2014) show that GDP per capita affect the level of development.This improvement will increase the purchasing power of people and at the end will improve
+the quality of education and health.
 
-
-
-
-
-
-
-
-
-
-
+# Conclusion
+ASEAN member countries' human development index shows that partially population and income growth rate influence the high level of human development in ASEAN.Also, the F test scores indicate that simultaneously all independent variables (population, inflation rate, unemployment rate, and per capita income growth rate) affect the human development index. Several policy recommendations can apply to policymakers regarding the human development index. The need for population control and an increase in spending on education and health is among them.
