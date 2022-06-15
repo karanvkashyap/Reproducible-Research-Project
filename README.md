@@ -1,6 +1,6 @@
 # Reproducible Research Project
  
-With this project we want to implement the previuos Research Article about "Determinant of Human Development Index
+With this project we want to implement the previous Research Article about "Determinant of Human Development Index
 in ASEAN Countries" Where we have taken data from 2000 - 2015 of HDI differences among ten member countries, Singapore and Brunei Darussalamhad 
 included in the category of the very high human development index. Malaysia and
 Thailand include in high human development index. Indonesia, Vietnam, Philippines,
