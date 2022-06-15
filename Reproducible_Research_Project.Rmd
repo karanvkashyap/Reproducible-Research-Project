@@ -120,14 +120,44 @@ One of the important test in this package for choosing between "fixed effect" or
 ```{r}
 phtest(fixed, Random)
 ```
-## Same model with updated newdataset
+#Now we will replicate this model with new dataset 
 
+```{r}
+library(readxl)
+NewData <- read_excel("C:\\Users\\ASUS\\Desktop\\Reproducible-Research-Project\\NewData.xlsx")
+View(NewData)
+head(NewData)
+```
 
+```{r}
+summary(NewData)
+```
 
+# Fixed effects model
 
+```{r}
+install.packages("plm")
+library("plm")
+Newfixed <- plm(HDI~Inflation+Unemployment+NewData$`GDP per capita growth`+NewData$`GDP growth`+Population, 
+            data=NewData, index=c("Country", "Year"), model="within")
+print(Newfixed)
+```
+## Perform Chow test
+```{r}
+sctest(NewData$HDI ~ NewData$Inflation+ NewData$Unemployment+NewData$`GDP per capita growth`+NewData$`GDP growth`+NewData$Population, type = "Chow", point = 10)
 
-
-
+```
+# Random Effect Model
+```{r}
+#install.packages("plm")
+library("plm")
+NewRandom <-plm(HDI~Inflation+Unemployment+NewData$`GDP per capita growth`+NewData$`GDP growth`+Population, 
+            data=NewData, index=c("Country", "Year"), model="random")
+```
+# Hausman Test
+```{r}
+phtest(Newfixed, NewRandom)
+```
 
 
 
